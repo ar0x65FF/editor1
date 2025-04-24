@@ -60,26 +60,25 @@ class PartMidiControl:
                 rest_ticks = b2
                 new_rest_ticks = self.ticks_to_midi_time(rest_ticks)
                 time_before_next_event += new_rest_ticks
-                current_event_time += rest_ticks
                 last_byte3 = b3
             elif b1 == 0x20:
                 high_byte = b3
                 low_byte = last_byte3
                 combined_rest = (high_byte<<8) | low_byte
                 extended_rest = self.ticks_to_midi_time(combined_rest)
-                time_before_next_event += extended_rest
+                time_before_next_event = extended_rest
             elif b1 == 0x50:
-                time_before_next_event = 0
                 rest_ticks = self.ticks_to_midi_time(b3)
+                last_byte3 = b3
                 time_before_next_event = rest_ticks
             elif b1 == 0x60:
-                time_before_next_event = 0
-                rest_ticks = self.ticks_to_midi_time(b3)
-                time_before_next_event = rest_ticks
                 if 0x00 <= b2 <= 0x70:
                     self.to_instrument(track=track, instrument=b2, channel=channel, time=current_event_time)
                 elif 0x80 <= b2 <= 0xF0:
-                    continue
+                    self.to_instrument(track=track, instrument=0, channel=channel, time=current_event_time)
+                rest_ticks = self.ticks_to_midi_time(b3)
+                last_byte3 = b3
+                time_before_next_event = rest_ticks
             elif 0x31 <= b1 <= 0x65 and (b1 & 0x0F) != 0:
                 midi_note = self.rnote_midi(b1)
                 note_duration_ticks = self.ticks_to_midi_time(b2)
